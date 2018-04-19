@@ -446,18 +446,17 @@ void Network::winograd_transform_in(const std::vector<float>& in,
     constexpr auto WTILES = (W + 1) / 2;
     constexpr auto P = WTILES * WTILES;
 
-	std::array<std::array<float, WTILES * 2 + 2>, WTILES * 2 + 2> in_pad;
-	for (auto xin = size_t{ 0 }; xin < in_pad.size(); xin++) {
-		in_pad[0][xin] = 0.0f;
-		in_pad[H + 1][xin] = 0.0f;
-		in_pad[H + 2][xin] = 0.0f;
-	}
-	for (auto yin = size_t{ 1 }; yin < in_pad[0].size() - 2; yin++) {
-		in_pad[yin][0] = 0.0f;
-		in_pad[yin][W + 1] = 0.0f;
-		in_pad[yin][W + 2] = 0.0f;
-	}
-
+    std::array<std::array<float, WTILES * 2 + 2>, WTILES * 2 + 2> in_pad;
+    for (auto xin = size_t{0}; xin < in_pad.size(); xin++) {
+        in_pad[0][xin]     = 0.0f;
+        in_pad[H + 1][xin] = 0.0f;
+        in_pad[H + 2][xin] = 0.0f;
+    }
+    for (auto yin = size_t{1}; yin < in_pad[0].size() - 2; yin++) {
+        in_pad[yin][0]     = 0.0f;
+        in_pad[yin][W + 1] = 0.0f;
+        in_pad[yin][W + 2] = 0.0f;
+    }
 
     for (auto ch = 0; ch < C; ch++) {
         for (auto yin = 0; yin < H; yin++) {
@@ -1027,17 +1026,11 @@ void Network::gather_features(const GameState* const state, NNPlanes & planes) {
     auto& black_to_move = planes[2 * INPUT_MOVES];
     auto& white_to_move = planes[2 * INPUT_MOVES + 1];
 
-	auto to_move = state->get_to_move();
-	auto blacks_move = to_move == FastBoard::BLACK;
-	auto black_offset = blacks_move ? 0 : INPUT_MOVES;
-	auto white_offset = blacks_move ? INPUT_MOVES : 0;
+    const auto to_move = state->get_to_move();
+    const auto blacks_move = to_move == FastBoard::BLACK;
 
-	// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-	if (cfg_reverse_board_for_net == true &&
-		((state->get_movenum() > 100 && cfg_quick_move < 49.0f) || state->get_handicap() == 0 || state->get_movenum() > 250))
-	{
-		blacks_move = to_move == FastBoard::WHITE;
-	}
+    const auto black_offset = blacks_move ? 0 : INPUT_MOVES;
+    const auto white_offset = blacks_move ? INPUT_MOVES : 0;
 
     if (blacks_move) {
         black_to_move.set();
