@@ -72,9 +72,6 @@ FILE* cfg_logfile_handle;
 bool cfg_quiet;
 std::string cfg_options_str;
 bool cfg_benchmark;
-int cfg_max_handicap;
-bool cfg_reverse_board_for_net;
-float cfg_quick_move;
 
 void GTP::setup_default_parameters() {
     cfg_gtp_mode = false;
@@ -90,7 +87,6 @@ void GTP::setup_default_parameters() {
     cfg_max_visits = std::numeric_limits<decltype(cfg_max_visits)>::max();
     cfg_timemanage = TimeManagement::AUTO;
     cfg_lagbuffer_cs = 100;
-	cfg_max_handicap = 13;
 #ifdef USE_OPENCL
     cfg_gpus = { };
     cfg_sgemm_exhaustive = false;
@@ -118,7 +114,6 @@ void GTP::setup_default_parameters() {
     std::uint64_t seed2 = std::chrono::high_resolution_clock::
         now().time_since_epoch().count();
     cfg_rng_seed = seed1 ^ seed2;
-	cfg_quick_move = 50;
 }
 
 const std::string GTP::s_commands[] = {
@@ -128,7 +123,6 @@ const std::string GTP::s_commands[] = {
     "quit",
     "known_command",
     "list_commands",
-    "quit",
     "boardsize",
     "clear_board",
     "komi",
@@ -145,7 +139,6 @@ const std::string GTP::s_commands[] = {
     "set_free_handicap",
     "loadsgf",
     "printsgf",
-	"kgs-chat",
     "kgs-genmove_cleanup",
     "kgs-time_settings",
     "kgs-game_over",
@@ -246,9 +239,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
         gtp_printf(id, PROGRAM_NAME);
         return true;
     } else if (command == "version") {
-		std::string outversion = " with weightfile " + cfg_weightsfile.substr(0, 8);
-		outversion = PROGRAM_VERSION + outversion;
-		gtp_printf(id, outversion.c_str());
+        gtp_printf(id, PROGRAM_VERSION);
         return true;
     } else if (command == "quit") {
         gtp_printf(id, "");
@@ -324,17 +315,6 @@ bool GTP::execute(GameState & game, std::string xinput) {
 
         return true;
     } else if (command.find("play") == 0) {
-		// analysis
-		if (search->getPlayouts() > 100)
-		{
-			game.winrate_you = search->get_dump_analysis();
-			cfg_quick_move = search->get_winrate();
-			if (game.get_movenum() > 2 + game.get_handicap())
-			{
-				game.else_move = game.move_to_text(search->get_best_move(0));
-			}
-		}
-
         if (command.find("resign") != std::string::npos) {
             game.play_move(FastBoard::RESIGN);
             gtp_printf(id, "");
@@ -342,13 +322,6 @@ bool GTP::execute(GameState & game, std::string xinput) {
             game.play_move(FastBoard::PASS);
             gtp_printf(id, "");
         } else {
-			if (search->getPlayouts() > 100)
-			{
-				// analysis
-				game.winrate_you = search->get_dump_analysis();
-				cfg_quick_move = search->get_winrate();
-			}
-
             std::istringstream cmdstream(command);
             std::string tmp;
             std::string color, vertex;
@@ -385,60 +358,15 @@ bool GTP::execute(GameState & game, std::string xinput) {
                 gtp_fail_printf(id, "syntax error");
                 return 1;
             }
-			game.set_to_move(who);
-			// if handi > cfg_max_handicap
-			int move = FastBoard::RESIGN;
-			if (game.get_handicap() <= cfg_max_handicap)
-			{
-				if (game.get_komi() >= 0.0f)
-				{
-					cfg_reverse_board_for_net = false;
-					if (game.get_komi() + game.get_handicap() < 7.5f)
-					{
-						if (who == FastBoard::WHITE)
-						{
-							cfg_reverse_board_for_net = true;
-						}
-					}
-					if (game.get_handicap() > 2 && cfg_reverse_board_for_net)
-					{
-						// high handicap only with not inverted net
-					}
-					else
-					{
-						// start thinking
-						move = search->think(who);
-					}
-				}
-			}
-			if (search->getPlayouts() > 100)
-			{
-				// analysis
-				game.winrate_me = search->get_dump_analysis();
+            // start thinking
+            {
+                game.set_to_move(who);
+                int move = search->think(who);
+                game.play_move(move);
 
-				float aktual_wr = search->get_winrate();
-				float wr_diff = aktual_wr - 100.0f + cfg_quick_move;
-				if (wr_diff < game.best_moves_diff)
-				{
-					// save best_move
-					game.best_move = game.move_to_text(game.get_last_move());
-					game.best_moves_diff = wr_diff;
-				}
-				if (wr_diff > game.bad_moves_diff)
-				{
-					// save worst_move
-					game.bad_move = game.move_to_text(game.get_last_move());
-					game.bad_moves_diff = wr_diff;
-					game.bad_else_move = game.else_move;
-				}
-			}
-
-			game.play_move(move);
-			std::string vertex = game.move_to_text(move);
-			gtp_printf(id, "%s", vertex.c_str());
-
-
-
+                std::string vertex = game.move_to_text(move);
+                gtp_printf(id, "%s", vertex.c_str());
+            }
             if (cfg_allow_pondering) {
                 // now start pondering
                 if (!game.has_resigned()) {
@@ -689,8 +617,18 @@ bool GTP::execute(GameState & game, std::string xinput) {
         }
         return true;
     } else if (command.find("kgs-chat") == 0) {
-		chat_kgs(game, id, command);
+        // kgs-chat (game|private) Name Message
+        std::istringstream cmdstream(command);
+        std::string tmp;
 
+        cmdstream >> tmp; // eat kgs-chat
+        cmdstream >> tmp; // eat game|private
+        cmdstream >> tmp; // eat player name
+        do {
+            cmdstream >> tmp; // eat message
+        } while (!cmdstream.fail());
+
+        gtp_fail_printf(id, "I'm a go bot, not a chat bot.");
         return true;
     } else if (command.find("kgs-game_over") == 0) {
         // Do nothing. Particularly, don't ponder.
@@ -859,37 +797,4 @@ bool GTP::execute(GameState & game, std::string xinput) {
 
     gtp_fail_printf(id, "unknown command");
     return true;
-}
-
-void GTP::chat_kgs(GameState & game, int id, std::string command)
-{
-	// kgs-chat (game|private) Name Message
-	std::istringstream cmdstream(command);
-	std::string tmp;
-
-	cmdstream >> tmp; // eat kgs-chat
-	cmdstream >> tmp; // eat game|private
-	if (tmp == "private")
-	{
-		cmdstream >> tmp; // eat player name
-		cmdstream >> tmp; // eat message
-		if (tmp == "wr")
-		{
-			std::string outkgschat = game.winrate_me + " " + game.winrate_you + " Moves till now: -best: " + game.best_move + " (Val: " + std::to_string(game.best_moves_diff) + ") -worst: " + game.bad_move + " (Val: " + std::to_string(game.bad_moves_diff) + "). I would have played "+game.bad_else_move;
-			gtp_printf(id, outkgschat.c_str());
-			gtp_printf(id, "end answer from lz");
-			do {
-				cmdstream >> tmp; // eat message
-			} while (!cmdstream.fail());
-			return;
-		}
-
-	}
-	do {
-		cmdstream >> tmp; // eat message
-	} while (!cmdstream.fail());
-
-	gtp_printf(id, "Unknown command, i know only 'wr' (=winrate) ");
-	gtp_printf(id, "end answer from lz");
-	return;
 }
