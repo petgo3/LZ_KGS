@@ -249,6 +249,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 		std::string outversion = " with weightfile " + cfg_weightsfile.substr(0, 8);
 		outversion = PROGRAM_VERSION + outversion;
 		gtp_printf(id, outversion.c_str());
+		cfg_quick_move = 50;
         return true;
     } else if (command == "quit") {
         gtp_printf(id, "");
@@ -418,18 +419,36 @@ bool GTP::execute(GameState & game, std::string xinput) {
 
 				float aktual_wr = search->get_winrate();
 				float wr_diff = aktual_wr - 100.0f + cfg_quick_move;
-				if (wr_diff < game.best_moves_diff)
+				if (
+					game.get_movenum() == 10 || game.get_movenum() == 11 ||
+					game.get_movenum() == 30 || game.get_movenum() == 31 ||
+					game.get_movenum() == 60 || game.get_movenum() == 61 ||
+					game.get_movenum() == 90 || game.get_movenum() == 91 ||
+					game.get_movenum() == 120 || game.get_movenum() == 121
+					)
 				{
-					// save best_move
-					game.best_move = game.move_to_text(game.get_last_move());
-					game.best_moves_diff = wr_diff;
+					game.best_moves_diff = 0;
+					game.best_move = "--";
+					game.bad_moves_diff = 0;
+					game.bad_move = "--";
+					game.else_move = "--";
+					game.bad_else_move = "--";
 				}
-				if (wr_diff > game.bad_moves_diff)
+				if (game.get_movenum() > game.get_handicap() + 2)
 				{
-					// save worst_move
-					game.bad_move = game.move_to_text(game.get_last_move());
-					game.bad_moves_diff = wr_diff;
-					game.bad_else_move = game.else_move;
+					if (wr_diff < game.best_moves_diff)
+					{
+						// save best_move
+						game.best_move = game.move_to_text(game.get_last_move());
+						game.best_moves_diff = wr_diff;
+					}
+					if (wr_diff > game.bad_moves_diff)
+					{
+						// save worst_move
+						game.bad_move = game.move_to_text(game.get_last_move());
+						game.bad_moves_diff = wr_diff;
+						game.bad_else_move = game.else_move;
+					}
 				}
 			}
 
@@ -875,7 +894,19 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 		cmdstream >> tmp; // eat message
 		if (tmp == "wr")
 		{
-			std::string outkgschat = game.winrate_me + " " + game.winrate_you + " Moves till now: -best: " + game.best_move + " (Val: " + std::to_string(game.best_moves_diff) + ") -worst: " + game.bad_move + " (Val: " + std::to_string(game.bad_moves_diff) + "). I would have played "+game.bad_else_move;
+			std::string inv = "(net is normal) ";
+			if (cfg_reverse_board_for_net == true &&
+				((game.get_movenum() > 100 && cfg_quick_move < 49.0f) || game.get_handicap() == 0 || game.get_movenum() > 250))
+			{
+				inv = "(net is inverted) ";
+			}
+			std::string mov = "At move ";
+			if (game.get_movenum() > game.get_handicap())
+			{
+				mov = "At move " + game.move_to_text(game.get_last_move());
+			}
+			//std::string outkgschat = "#" + std::to_string(static_cast<int>(game.get_movenum())) + ": " + 
+				std::string outkgschat = mov + ": " + inv + game.winrate_me + " " + game.winrate_you + " Moves till now: -best: " + game.best_move + " (Val: " + std::to_string(game.best_moves_diff) + ") -worst: " + game.bad_move + " (Val: " + std::to_string(game.bad_moves_diff) + "). I would have played "+game.bad_else_move;
 			gtp_printf(id, outkgschat.c_str());
 			gtp_printf(id, "end answer from lz");
 			do {
