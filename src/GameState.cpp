@@ -61,6 +61,7 @@ void GameState::reset_game() {
     m_timecontrol.reset_clocks();
 
     m_resigned = FastBoard::EMPTY;
+
 	best_moves_diff = 0;
 	best_move = "--";
 	bad_moves_diff = 0;
