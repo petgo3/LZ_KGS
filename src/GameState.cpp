@@ -49,6 +49,7 @@ void GameState::init_game(int size, float komi) {
 	bad_move = "--";
 	else_move = "--";
 	bad_else_move = "--";
+
 }
 
 void GameState::reset_game() {
