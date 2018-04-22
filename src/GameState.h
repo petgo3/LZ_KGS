@@ -74,6 +74,8 @@ public:
 	std::string else_move;
 	std::string bad_else_move;
 
+	std::string bad_move_history;
+
 
 private:
     bool valid_handicap(int stones);

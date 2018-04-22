@@ -450,12 +450,27 @@ bool GTP::execute(GameState & game, std::string xinput) {
 						game.best_move = game.move_to_text(game.get_last_move());
 						game.best_moves_diff = wr_diff;
 					}
-					if (wr_diff > game.bad_moves_diff)
+					if (wr_diff > game.bad_moves_diff && game.move_to_text(game.get_last_move()) != game.else_move)
 					{
 						// save worst_move
 						game.bad_move = game.move_to_text(game.get_last_move());
 						game.bad_moves_diff = wr_diff;
 						game.bad_else_move = game.else_move;
+					}
+					if (wr_diff > game.bad_moves_diff / 2 && game.bad_moves_diff > 0 && game.move_to_text(game.get_last_move()) != game.else_move)
+					{
+						if (game.bad_move_history == "")
+						{
+							game.bad_move_history = "|";
+						}
+						else
+						{
+							if (game.else_move != "resign" && game.else_move != "--")
+							{
+								// add to bad history
+								game.bad_move_history += " " + game.move_to_text(game.get_last_move()) + " (" + std::to_string(wr_diff) + ", " + game.else_move + ")";
+							}
+						}
 					}
 				}
 			}
@@ -921,13 +936,23 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 			} while (!cmdstream.fail());
 			return;
 		}
+		if (tmp == "bm")
+		{
+			std::string outkgschat = game.bad_move_history;
+			gtp_printf(id, outkgschat.c_str());
+			gtp_printf(id, "end answer from lz");
+			do {
+				cmdstream >> tmp; // eat message
+			} while (!cmdstream.fail());
+			return;
+		}
 
 	}
 	do {
 		cmdstream >> tmp; // eat message
 	} while (!cmdstream.fail());
 
-	gtp_printf(id, "Unknown command, i know only 'wr' (=winrate) ");
+	gtp_printf(id, "Unknown command, i know only 'wr' (=winrate) and 'bm' (=list of bad moves (value, better move)) ");
 	gtp_printf(id, "end answer from lz");
 	return;
 }
