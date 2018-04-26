@@ -73,9 +73,6 @@ bool cfg_quiet;
 std::string cfg_options_str;
 bool cfg_benchmark;
 int cfg_max_handicap;
-bool cfg_reverse_board_for_net;
-bool cfg_reverse_board_set;
-float cfg_quick_move;
 
 void GTP::setup_default_parameters() {
     cfg_gtp_mode = false;
@@ -119,7 +116,6 @@ void GTP::setup_default_parameters() {
     std::uint64_t seed2 = std::chrono::high_resolution_clock::
         now().time_since_epoch().count();
     cfg_rng_seed = seed1 ^ seed2;
-	cfg_quick_move = 50;
 }
 
 const std::string GTP::s_commands[] = {
@@ -250,8 +246,6 @@ bool GTP::execute(GameState & game, std::string xinput) {
 		std::string outversion = " with weightfile " + cfg_weightsfile.substr(0, 8);
 		outversion = PROGRAM_VERSION + outversion;
 		gtp_printf(id, outversion.c_str());
-		cfg_quick_move = 50;
-		cfg_reverse_board_set = false;
         return true;
     } else if (command == "quit") {
         gtp_printf(id, "");
@@ -331,7 +325,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 		if (search->getPlayouts() > 100)
 		{
 			game.winrate_you = search->get_dump_analysis();
-			cfg_quick_move = search->get_winrate();
+			game.cfg_quick_move = search->get_winrate();
 			if (game.get_movenum() > 2 + game.get_handicap())
 			{
 				game.else_move = game.move_to_text(search->get_best_move(0));
@@ -349,7 +343,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			{
 				// analysis
 				game.winrate_you = search->get_dump_analysis();
-				cfg_quick_move = search->get_winrate();
+				game.cfg_quick_move = search->get_winrate();
 			}
 
             std::istringstream cmdstream(command);
@@ -395,15 +389,15 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			{
 				if (game.get_komi() >= 0.0f)
 				{
-					cfg_reverse_board_for_net = false;
-					if (game.get_komi() + game.get_handicap() < 7.5f)
+					game.cfg_reverse_board_for_net = false;
+					if (game.get_komi() + game.get_handicap() < 7.4f)
 					{
 						if (who == FastBoard::WHITE)
 						{
-							cfg_reverse_board_for_net = true;
+							game.cfg_reverse_board_for_net = true;
 						}
 					}
-					if (game.get_handicap() > 2 && cfg_reverse_board_for_net)
+					if (game.get_handicap() > 2 && game.cfg_reverse_board_for_net)
 					{
 						// high handicap only with not inverted net
 					}
@@ -417,16 +411,15 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			if (search->getPlayouts() > 100)
 			{
 				// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-				if (cfg_reverse_board_for_net == true &&
-					((game.get_movenum() > 50 && cfg_quick_move < 30.0f) || game.get_handicap() == 0 || game.get_movenum() > 220))
+				if (game.cfg_reverse_board_for_net == true && ((game.get_movenum() > 50 && game.cfg_quick_move < 30.0f) || game.get_handicap() == 0 || game.get_movenum() > 220))
 				{
-					cfg_reverse_board_set = true;
+					game.cfg_reverse_board_set = true;
 				}
 				// analysis
 				game.winrate_me = search->get_dump_analysis();
 
 				float aktual_wr = search->get_winrate();
-				float wr_diff = aktual_wr - 100.0f + cfg_quick_move;
+				float wr_diff = aktual_wr - 100.0f + game.cfg_quick_move;
 				if (
 					game.get_movenum() == 10 || game.get_movenum() == 11 ||
 					game.get_movenum() == 30 || game.get_movenum() == 31 ||
@@ -461,7 +454,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 					{
 						if (game.bad_move_history == "")
 						{
-							game.bad_move_history = "|";
+							game.bad_move_history = "Bad moves were (value, good move) ";
 						}
 						else
 						{
@@ -918,7 +911,7 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 		if (tmp == "wr")
 		{
 			std::string inv = "(net is normal) ";
-			if (cfg_reverse_board_set == true)
+			if (game.cfg_reverse_board_set == true)
 			{
 				inv = "(net is inverted) ";
 			}

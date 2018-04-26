@@ -1028,7 +1028,7 @@ void Network::gather_features(const GameState* const state, NNPlanes & planes) {
 	auto white_offset = blacks_move ? INPUT_MOVES : 0;
 
 	// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-	if (cfg_reverse_board_set == true)
+	if (state->cfg_reverse_board_set == true)
 	{
 		blacks_move = to_move == FastBoard::WHITE;
 	}
