@@ -75,6 +75,9 @@ public:
 	std::string bad_else_move;
 
 	std::string bad_move_history;
+	bool cfg_reverse_board_for_net;
+	bool cfg_reverse_board_set;
+	float cfg_quick_move;
 
 
 private:

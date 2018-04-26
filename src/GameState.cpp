@@ -50,6 +50,8 @@ void GameState::init_game(int size, float komi) {
 	else_move = "--";
 	bad_else_move = "--";
 	bad_move_history = "";
+	cfg_reverse_board_for_net = false;
+	cfg_reverse_board_set = false;
 
 }
 
@@ -70,6 +72,10 @@ void GameState::reset_game() {
 	else_move = "--";
 	bad_else_move = "--";
 	bad_move_history = "";
+
+	cfg_reverse_board_for_net = false;
+	cfg_reverse_board_set = false;
+	cfg_quick_move = 50;
 
 }
 

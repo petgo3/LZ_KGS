@@ -56,9 +56,6 @@ extern bool cfg_quiet;
 extern std::string cfg_options_str;
 extern bool cfg_benchmark;
 extern int cfg_max_handicap;
-extern bool cfg_reverse_board_for_net;
-extern bool cfg_reverse_board_set;
-extern float cfg_quick_move;
 
 /*
     A list of all valid GTP2 commands is defined here:

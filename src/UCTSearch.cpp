@@ -611,10 +611,10 @@ int UCTSearch::think(int color, passflag_t passflag) {
         m_rootstate.board.get_boardsize());
     auto time_for_move = m_rootstate.get_timecontrol().max_time_for_move(color);
 
-	if (cfg_quick_move < 3.0f)
+	if (m_rootstate.cfg_quick_move < 3.0f)
 	{
 		time_for_move = 300;
-		if (cfg_quick_move < 1.0f)
+		if (m_rootstate.cfg_quick_move < 1.0f)
 		{
 			time_for_move = 100;
 		}
