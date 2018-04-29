@@ -78,7 +78,8 @@ public:
 	bool cfg_reverse_board_for_net;
 	bool cfg_reverse_board_set;
 	float cfg_quick_move;
-
+	float correct_moves;
+	float counted_moves;
 
 private:
     bool valid_handicap(int stones);

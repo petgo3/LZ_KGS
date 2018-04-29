@@ -339,14 +339,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
             game.play_move(FastBoard::PASS);
             gtp_printf(id, "");
         } else {
-			if (search->getPlayouts() > 100)
-			{
-				// analysis
-				game.winrate_you = search->get_dump_analysis();
-				game.cfg_quick_move = search->get_winrate();
-			}
-
-            std::istringstream cmdstream(command);
+			std::istringstream cmdstream(command);
             std::string tmp;
             std::string color, vertex;
 
@@ -437,6 +430,11 @@ bool GTP::execute(GameState & game, std::string xinput) {
 				}
 				if (game.get_movenum() > game.get_handicap() + 2)
 				{
+					if (game.move_to_text(game.get_last_move()) == game.else_move)
+					{
+						game.correct_moves++;
+					}
+					game.counted_moves++;
 					if (wr_diff < game.best_moves_diff)
 					{
 						// save best_move
@@ -452,17 +450,10 @@ bool GTP::execute(GameState & game, std::string xinput) {
 					}
 					if (wr_diff > game.bad_moves_diff / 2 && game.bad_moves_diff > 0 && game.move_to_text(game.get_last_move()) != game.else_move)
 					{
-						if (game.bad_move_history == "")
+						if (game.else_move != "resign" && game.else_move != "--")
 						{
-							game.bad_move_history = "Bad moves were (value, good move) ";
-						}
-						else
-						{
-							if (game.else_move != "resign" && game.else_move != "--")
-							{
-								// add to bad history
-								game.bad_move_history += " " + game.move_to_text(game.get_last_move()) + " (" + std::to_string(wr_diff) + ", " + game.else_move + ")";
-							}
+							// add to bad history
+							game.bad_move_history += " " + game.move_to_text(game.get_last_move()) + " (" + std::to_string(wr_diff) + ", " + game.else_move + ")";
 						}
 					}
 				}
@@ -931,7 +922,16 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 		}
 		if (tmp == "bm")
 		{
-			std::string outkgschat = game.bad_move_history;
+			std::string outkgschat = "";
+			if (game.counted_moves > 0.0f)
+			{
+				outkgschat += "Correct moves: " + std::to_string(100.0f * game.correct_moves / game.counted_moves) + " percent! ";
+			}
+			if (game.bad_move_history != "")
+			{
+				outkgschat += "Bad moves were (value, good move): ";
+			}
+			outkgschat += game.bad_move_history;
 			gtp_printf(id, outkgschat.c_str());
 			gtp_printf(id, "end answer from lz");
 			do {

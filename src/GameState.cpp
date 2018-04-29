@@ -52,6 +52,8 @@ void GameState::init_game(int size, float komi) {
 	bad_move_history = "";
 	cfg_reverse_board_for_net = false;
 	cfg_reverse_board_set = false;
+	correct_moves = 0;
+	counted_moves = 0;
 
 }
 
@@ -76,6 +78,8 @@ void GameState::reset_game() {
 	cfg_reverse_board_for_net = false;
 	cfg_reverse_board_set = false;
 	cfg_quick_move = 50;
+	correct_moves = 0;
+	counted_moves = 0;
 
 }
 
