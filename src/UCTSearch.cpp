@@ -488,7 +488,7 @@ std::string UCTSearch::get_dump_analysis() {
 	dump += " Playouts: ";
 	dump += std::to_string(static_cast<int>(m_playouts));
 	dump += ", Win: ";
-	dump += std::to_string(100.0f * m_root->get_eval(color));
+	dump += std::to_string(100.0f * m_root->get_eval(color)).substr(0 , 4);
 	/*dump += ", PV: ";
 	dump += get_pv(tempstate, *m_root).substr(0, 20);*/
 	return dump;
@@ -558,22 +558,34 @@ size_t UCTSearch::prune_noncontenders(int elapsed_centis, int time_for_move) {
 }
 
 bool UCTSearch::have_alternate_moves(int elapsed_centis, int time_for_move) {
-    if (cfg_timemanage != TimeManagement::ON) {
-        return true;
-    }
-    auto pruned = prune_noncontenders(elapsed_centis, time_for_move);
-    if (pruned == m_root->get_children().size() - 1) {
-        // In a timed search we will essentially always exit because
-        // the remaining time is too short to let another move win, so
-        // avoid spamming this message every move. We'll print it if we
-        // save at least half a second.
-        if (time_for_move - elapsed_centis > 50) {
-            myprintf("%.1fs left, stopping early.\n",
-                     (time_for_move - elapsed_centis) / 100.0f);
-        }
-        return false;
-    }
-    return true;
+	if (cfg_timemanage == TimeManagement::OFF) {
+		return true;
+	}
+	auto pruned = prune_noncontenders(elapsed_centis, time_for_move);
+	if (pruned < m_root->get_children().size() - 1) {
+		return true;
+	}
+	// If we cannot save up time anyway, use all of it. This
+	// behavior can be overruled by setting "fast" time management,
+	// which will cause Leela to quickly respond to obvious/forced moves.
+	// That comes at the cost of some playing strength as she now cannot
+	// think ahead about her next moves in the remaining time.
+	auto my_color = m_rootstate.get_to_move();
+	auto tc = m_rootstate.get_timecontrol();
+	if (!tc.can_accumulate_time(my_color)) {
+		if (cfg_timemanage != TimeManagement::FAST) {
+			return true;
+		}
+	}
+	// In a timed search we will essentially always exit because
+	// the remaining time is too short to let another move win, so
+	// avoid spamming this message every move. We'll print it if we
+	// save at least half a second.
+	if (time_for_move - elapsed_centis > 50) {
+		myprintf("%.1fs left, stopping early.\n",
+			(time_for_move - elapsed_centis) / 100.0f);
+	}
+	return false;
 }
 
 bool UCTSearch::stop_thinking(int elapsed_centis, int time_for_move) const {

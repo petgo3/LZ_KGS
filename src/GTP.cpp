@@ -453,7 +453,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 						if (game.else_move != "resign" && game.else_move != "--")
 						{
 							// add to bad history
-							game.bad_move_history += " " + game.move_to_text(game.get_last_move()) + " (" + std::to_string(wr_diff) + ", " + game.else_move + ")";
+							game.bad_move_history += " " + game.move_to_text(game.get_last_move()) + " (" + std::to_string(wr_diff).substr(0, 4) + ", " + game.else_move + ")";
 						}
 					}
 				}
@@ -925,7 +925,7 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 			std::string outkgschat = "";
 			if (game.counted_moves > 0.0f)
 			{
-				outkgschat += "Correct moves: " + std::to_string(100.0f * game.correct_moves / game.counted_moves) + " percent! ";
+				outkgschat += "Correct moves: " + std::to_string(100.0f * game.correct_moves / game.counted_moves).substr(0 , 4) + " percent! ";
 			}
 			if (game.bad_move_history != "")
 			{
