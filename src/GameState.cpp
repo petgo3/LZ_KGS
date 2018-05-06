@@ -1,6 +1,6 @@
 /*
     This file is part of Leela Zero.
-    Copyright (C) 2017 Gian-Carlo Pascutto
+    Copyright (C) 2017-2018 Gian-Carlo Pascutto and contributors
 
     Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,7 +66,6 @@ void GameState::reset_game() {
     m_timecontrol.reset_clocks();
 
     m_resigned = FastBoard::EMPTY;
-
 	best_moves_diff = 0;
 	best_move = "--";
 	bad_moves_diff = 0;
@@ -74,10 +73,8 @@ void GameState::reset_game() {
 	else_move = "--";
 	bad_else_move = "--";
 	bad_move_history = "";
-
 	cfg_reverse_board_for_net = false;
 	cfg_reverse_board_set = false;
-	cfg_quick_move = 50;
 	correct_moves = 0;
 	counted_moves = 0;
 

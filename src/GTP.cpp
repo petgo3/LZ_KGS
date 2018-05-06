@@ -1,6 +1,6 @@
 /*
     This file is part of Leela Zero.
-    Copyright (C) 2017 Gian-Carlo Pascutto
+    Copyright (C) 2017-2018 Gian-Carlo Pascutto and contributors
 
     Leela Zero is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,8 +84,8 @@ void GTP::setup_default_parameters() {
 #else
     cfg_num_threads = cfg_max_threads;
 #endif
-    cfg_max_playouts = std::numeric_limits<decltype(cfg_max_playouts)>::max();
-    cfg_max_visits = std::numeric_limits<decltype(cfg_max_visits)>::max();
+    cfg_max_playouts = UCTSearch::UNLIMITED_PLAYOUTS;
+    cfg_max_visits = UCTSearch::UNLIMITED_PLAYOUTS;
     cfg_timemanage = TimeManagement::AUTO;
     cfg_lagbuffer_cs = 100;
 	cfg_max_handicap = 13;
@@ -125,7 +125,6 @@ const std::string GTP::s_commands[] = {
     "quit",
     "known_command",
     "list_commands",
-    "quit",
     "boardsize",
     "clear_board",
     "komi",
@@ -237,7 +236,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 
     /* process commands */
     if (command == "protocol_version") {
-        gtp_printf(id, "%d", GTP_VERSION);
+		gtp_printf(id, "%d", GTP_VERSION);
         return true;
     } else if (command == "name") {
         gtp_printf(id, PROGRAM_NAME);
@@ -331,7 +330,6 @@ bool GTP::execute(GameState & game, std::string xinput) {
 				game.else_move = game.move_to_text(search->get_best_move(0));
 			}
 		}
-
         if (command.find("resign") != std::string::npos) {
             game.play_move(FastBoard::RESIGN);
             gtp_printf(id, "");
@@ -339,7 +337,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
             game.play_move(FastBoard::PASS);
             gtp_printf(id, "");
         } else {
-			std::istringstream cmdstream(command);
+            std::istringstream cmdstream(command);
             std::string tmp;
             std::string color, vertex;
 
@@ -459,11 +457,10 @@ bool GTP::execute(GameState & game, std::string xinput) {
 				}
 			}
 
-			game.play_move(move);
-			std::string vertex = game.move_to_text(move);
-			gtp_printf(id, "%s", vertex.c_str());
+            game.play_move(move);
 
-
+            std::string vertex = game.move_to_text(move);
+            gtp_printf(id, "%s", vertex.c_str());
 
             if (cfg_allow_pondering) {
                 // now start pondering
@@ -613,20 +610,19 @@ bool GTP::execute(GameState & game, std::string xinput) {
     } else if (command.find("heatmap") == 0) {
         std::istringstream cmdstream(command);
         std::string tmp;
-        int rotation;
+        int symmetry;
 
         cmdstream >> tmp;   // eat heatmap
-        cmdstream >> rotation;
+        cmdstream >> symmetry;
 
-        if (!cmdstream.fail()) {
-            auto vec = Network::get_scored_moves(
-                &game, Network::Ensemble::DIRECT, rotation, true);
-            Network::show_heatmap(&game, vec, false);
-        } else {
-            auto vec = Network::get_scored_moves(
-                &game, Network::Ensemble::DIRECT, 0, true);
-            Network::show_heatmap(&game, vec, false);
+        if (cmdstream.fail()) {
+            symmetry = 0;
         }
+
+        auto vec = Network::get_scored_moves(
+            &game, Network::Ensemble::DIRECT, symmetry, true);
+        Network::show_heatmap(&game, vec, false);
+
         gtp_printf(id, "");
         return true;
     } else if (command.find("fixed_handicap") == 0) {
@@ -716,7 +712,6 @@ bool GTP::execute(GameState & game, std::string xinput) {
         return true;
     } else if (command.find("kgs-chat") == 0) {
 		chat_kgs(game, id, command);
-
         return true;
     } else if (command.find("kgs-game_over") == 0) {
         // Do nothing. Particularly, don't ponder.
@@ -886,7 +881,6 @@ bool GTP::execute(GameState & game, std::string xinput) {
     gtp_fail_printf(id, "unknown command");
     return true;
 }
-
 void GTP::chat_kgs(GameState & game, int id, std::string command)
 {
 	// kgs-chat (game|private) Name Message
@@ -912,7 +906,7 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 				mov = "At move " + game.move_to_text(game.get_last_move());
 			}
 			//std::string outkgschat = "#" + std::to_string(static_cast<int>(game.get_movenum())) + ": " + 
-				std::string outkgschat = mov + ": " + inv + game.winrate_me + " " + game.winrate_you + " Moves till now: -best: " + game.best_move + " (Val: " + std::to_string(game.best_moves_diff) + ") -worst: " + game.bad_move + " (Val: " + std::to_string(game.bad_moves_diff) + "). I would have played "+game.bad_else_move;
+			std::string outkgschat = mov + ": " + inv + game.winrate_me + " " + game.winrate_you + " Moves till now: -best: " + game.best_move + " (Val: " + std::to_string(game.best_moves_diff).substr(0, 4) + ") -worst: " + game.bad_move + " (Val: " + std::to_string(game.bad_moves_diff).substr(0, 4) + "). I would have played " + game.bad_else_move;
 			gtp_printf(id, outkgschat.c_str());
 			gtp_printf(id, "end answer from lz");
 			do {
@@ -925,7 +919,7 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 			std::string outkgschat = "";
 			if (game.counted_moves > 0.0f)
 			{
-				outkgschat += "Correct moves: " + std::to_string(100.0f * game.correct_moves / game.counted_moves).substr(0 , 4) + " percent! ";
+				outkgschat += "Correct moves: " + std::to_string(100.0f * game.correct_moves / game.counted_moves).substr(0, 4) + " percent! ";
 			}
 			if (game.bad_move_history != "")
 			{
