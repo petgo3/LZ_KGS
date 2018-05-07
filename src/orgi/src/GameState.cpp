@@ -43,19 +43,6 @@ void GameState::init_game(int size, float komi) {
     m_timecontrol.reset_clocks();
 
     m_resigned = FastBoard::EMPTY;
-	best_moves_diff = 0;
-	best_move = "--";
-	bad_moves_diff = 0;
-	bad_move = "--";
-	else_move = "--";
-	bad_else_move = "--";
-	bad_move_history = "";
-	cfg_reverse_board_for_net = false;
-	cfg_reverse_board_set = false;
-	correct_moves = 0;
-	counted_moves = 0;
-	cfg_quick_move = 50.0f;
-
 }
 
 void GameState::reset_game() {
@@ -67,18 +54,6 @@ void GameState::reset_game() {
     m_timecontrol.reset_clocks();
 
     m_resigned = FastBoard::EMPTY;
-	best_moves_diff = 0;
-	best_move = "--";
-	bad_moves_diff = 0;
-	bad_move = "--";
-	else_move = "--";
-	bad_else_move = "--";
-	bad_move_history = "";
-	cfg_reverse_board_for_net = false;
-	cfg_reverse_board_set = false;
-	correct_moves = 0;
-	counted_moves = 0;
-	cfg_quick_move = 50.0f;
 }
 
 bool GameState::forward_move(void) {
