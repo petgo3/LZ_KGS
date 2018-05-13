@@ -388,7 +388,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 							game.cfg_reverse_board_for_net = true;
 						}
 					}
-					if (game.get_handicap() > 2 && game.cfg_reverse_board_for_net)
+					if (game.get_handicap() >= cfg_max_handicap && game.cfg_reverse_board_for_net)
 					{
 						// high handicap only with not inverted net
 					}

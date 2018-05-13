@@ -50,6 +50,7 @@
  */
 #define USE_BLAS
 
+#define USE_HALF
 /*
  * We use OpenBLAS by default, except on macOS, which has a fast BLAS
  * built-in. (Accelerate)

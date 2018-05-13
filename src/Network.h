@@ -103,7 +103,7 @@ private:
                                std::vector<float>& M, const int C, const int K);
     static int get_nn_idx_symmetry(const int vertex, int symmetry);
     static void fill_input_plane_pair(
-      const FullBoard& board, BoardPlane& black, BoardPlane& white);
+      const FullBoard& board, BoardPlane& black, BoardPlane& white, bool reverse);
     static Netresult get_scored_moves_internal(
       const NNPlanes& planes, const int symmetry);
 #if defined(USE_BLAS)

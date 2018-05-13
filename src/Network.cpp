@@ -1045,22 +1045,44 @@ void Network::show_heatmap(const FastState* const state,
 }
 
 void Network::fill_input_plane_pair(const FullBoard& board,
-                                    BoardPlane& black, BoardPlane& white) {
+                                    BoardPlane& black, BoardPlane& white, bool reverse) {
     auto idx = 0;
-    for (auto j = 0; j < BOARD_SIZE; j++) {
-        for (auto i = 0; i < BOARD_SIZE; i++) {
-            const auto vtx = board.get_vertex(i, j);
-            const auto color = board.get_square(vtx);
-            if (color != FastBoard::EMPTY) {
-                if (color == FastBoard::BLACK) {
-                    black[idx] = true;
-                } else {
-                    white[idx] = true;
-                }
-            }
-            idx++;
-        }
-    }
+	/*if (reverse)
+	{
+		for (auto j = 0; j < BOARD_SIZE; j++) {
+			for (auto i = 0; i < BOARD_SIZE; i++) {
+				const auto vtx = board.get_vertex(i, j);
+				const auto color = board.get_square(vtx);
+				if (color != FastBoard::EMPTY) {
+					if (color == FastBoard::WHITE) {
+						black[idx] = true;
+					}
+					else {
+						white[idx] = true;
+					}
+				}
+				idx++;
+			}
+		}
+	}
+	else
+	{*/
+		for (auto j = 0; j < BOARD_SIZE; j++) {
+			for (auto i = 0; i < BOARD_SIZE; i++) {
+				const auto vtx = board.get_vertex(i, j);
+				const auto color = board.get_square(vtx);
+				if (color != FastBoard::EMPTY) {
+					if (color == FastBoard::BLACK) {
+						black[idx] = true;
+					}
+					else {
+						white[idx] = true;
+					}
+				}
+				idx++;
+			}
+		}
+	//}
 }
 
 void Network::gather_features(const GameState* const state, NNPlanes & planes) {
@@ -1091,7 +1113,7 @@ void Network::gather_features(const GameState* const state, NNPlanes & planes) {
         // collect white, black occupation planes
         fill_input_plane_pair(state->get_past_board(h),
                               planes[black_offset + h],
-                              planes[white_offset + h]);
+                              planes[white_offset + h], state->cfg_reverse_board_set);
     }
 }
 
