@@ -402,7 +402,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			if (search->getPlayouts() > 100)
 			{
 				// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-				if (game.cfg_reverse_board_for_net == true && ((game.get_movenum() > 50 && game.cfg_quick_move < 30.0f) || game.get_handicap() == 0 || game.get_movenum() > 220))
+				if (game.cfg_reverse_board_for_net == true && ((game.get_movenum() > 50 && game.cfg_quick_move < 30.0f) || game.get_movenum() > 220))
 				{
 					game.cfg_reverse_board_set = true;
 				}

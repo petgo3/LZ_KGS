@@ -884,6 +884,7 @@ Network::Netresult Network::get_scored_moves(
             return result;
         }
     }
+	//cfg_reverse_board_use = false;
 
     if (ensemble == DIRECT) {
         assert(symmetry >= 0 && symmetry <= 7);
@@ -903,6 +904,18 @@ Network::Netresult Network::get_scored_moves(
         assert(symmetry == -1);
         const auto rand_sym = Random::get_Rng().randfix<8>();
         result = get_scored_moves_internal(state, rand_sym);
+		// for handicap ask two times net with 7,5 komi and -7,5 komi, add average the result
+		/*if (state->cfg_reverse_board_set)
+		{
+			cfg_reverse_board_use = true;
+
+			Netresult result1 = get_scored_moves_internal(state, rand_sym);
+			result.winrate = result.winrate * 0.5 + result1.winrate * 0.5f;
+			result.policy_pass = result.policy_pass * 0.5 + result1.policy_pass * 0.5f;
+			for (auto idx = size_t{0}; idx < BOARD_SQUARES; idx++) {
+                result.policy[idx] = result.policy[idx] * 0.5f + result1.policy[idx] * 0.5f;
+            }
+		}*/
     }
 
     // v2 format (ELF Open Go) returns black value, not stm
@@ -971,7 +984,7 @@ Network::Netresult Network::get_scored_moves_internal(
         innerproduct<256, 1, false>(winrate_data, ip2_val_w, ip2_val_b);
 
     // Sigmoid
-    const auto winrate_sig = (1.0f + std::tanh(winrate_out[0])) / 2.0f;
+    const auto winrate_sig = 1.0f / (1.0f + std::exp(-2.0f * winrate_out[0]));;
 
     Netresult result;
 

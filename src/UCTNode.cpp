@@ -75,7 +75,7 @@ bool UCTNode::create_children(std::atomic<int>& nodecount,
     }
     // We'll be the one queueing this node for expansion, stop others
     m_is_expanding = true;
-    lock.unlock();
+	lock.unlock();
 
     const auto raw_netlist = Network::get_scored_moves(
         &state, Network::Ensemble::RANDOM_SYMMETRY);
@@ -87,6 +87,7 @@ bool UCTNode::create_children(std::atomic<int>& nodecount,
     if (state.board.white_to_move()) {
         m_net_eval = 1.0f - m_net_eval;
     }
+	update(m_net_eval);
     eval = m_net_eval;
 
     std::vector<Network::ScoreVertexPair> nodelist;
@@ -204,6 +205,18 @@ int UCTNode::get_visits() const {
     return m_visits;
 }
 
+// Return the true score, without taking into account virtual losses.
+float UCTNode::get_pure_eval(int tomove) const {
+	auto visits = get_visits();
+	if (visits == 0) return 0.5f;
+	assert(visits > 0);
+	auto blackeval = get_blackevals();
+	auto score = static_cast<float>(blackeval / double(visits));
+	if (tomove == FastBoard::WHITE) {
+		score = 1.0f - score;
+	}
+	return score;
+}
 float UCTNode::get_eval(int tomove) const {
     // Due to the use of atomic updates and virtual losses, it is
     // possible for the visit count to change underneath us. Make sure
@@ -254,14 +267,15 @@ UCTNode* UCTNode::uct_select_child(int color, bool is_root) {
 
     auto numerator = std::sqrt(double(parentvisits));
     auto fpu_reduction = 0.0f;
+	auto pure_eval = get_pure_eval(color);
     // Lower the expected eval for moves that are likely not the best.
     // Do not do this if we have introduced noise at this node exactly
     // to explore more.
     if (!is_root || !cfg_noise) {
-        fpu_reduction = cfg_fpu_reduction * std::sqrt(total_visited_policy);
+        fpu_reduction = cfg_fpu_reduction * std::sqrt(total_visited_policy)*pure_eval/0.5f;
     }
-    // Estimated eval for unknown nodes = original parent NN eval - reduction
-    auto fpu_eval = get_net_eval(color) - fpu_reduction;
+    // Estimated eval for unknown nodes = current parent winrate - reduction
+	auto fpu_eval = pure_eval - fpu_reduction;
 
     auto best = static_cast<UCTNodePointer*>(nullptr);
     auto best_value = std::numeric_limits<double>::lowest();
@@ -277,7 +291,7 @@ UCTNode* UCTNode::uct_select_child(int color, bool is_root) {
         }
         auto psa = child.get_score();
         auto denom = 1.0 + child.get_visits();
-        auto puct = cfg_puct * psa * (numerator / denom);
+        auto puct = cfg_puct * psa * (numerator / denom) * pure_eval / 0.5f;
         auto value = winrate + puct;
         assert(value > std::numeric_limits<double>::lowest());
 

@@ -33,6 +33,8 @@
 #include "KoState.h"
 #include "UCTSearch.h"
 
+//bool cfg_reverse_board_use;
+
 void GameState::init_game(int size, float komi) {
     KoState::init_game(size, komi);
 
@@ -52,6 +54,7 @@ void GameState::init_game(int size, float komi) {
 	bad_move_history = "";
 	cfg_reverse_board_for_net = false;
 	cfg_reverse_board_set = false;
+	//cfg_reverse_board_use = false;
 	correct_moves = 0;
 	counted_moves = 0;
 	cfg_quick_move = 50.0f;
@@ -76,6 +79,7 @@ void GameState::reset_game() {
 	bad_move_history = "";
 	cfg_reverse_board_for_net = false;
 	cfg_reverse_board_set = false;
+	//cfg_reverse_board_use = false;
 	correct_moves = 0;
 	counted_moves = 0;
 	cfg_quick_move = 50.0f;
