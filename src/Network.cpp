@@ -1085,7 +1085,7 @@ std::vector<net_t> Network::gather_features(const GameState* const state,
     const auto white_it = blacks_move ?
                           begin(input_data) + INPUT_MOVES * BOARD_SQUARES :
                           begin(input_data);
-	if (state->cfg_reverse_board_set)
+	if (cfg_reverse_board_set)
 	{
 		blacks_move = to_move == FastBoard::WHITE;
 	}

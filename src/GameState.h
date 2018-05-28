@@ -28,7 +28,10 @@
 #include "KoState.h"
 #include "TimeControl.h"
 
-//extern bool cfg_reverse_board_use;
+extern int cfg_handicap_used;
+extern float cfg_quick_move;
+extern bool cfg_reverse_board_set;
+
 class GameState : public KoState {
 public:
     explicit GameState() = default;
@@ -78,7 +81,6 @@ public:
 	std::string bad_move_history;
 	bool cfg_reverse_board_for_net;
 	bool cfg_reverse_board_set;
-    
 
 	float cfg_quick_move;
 	float correct_moves;

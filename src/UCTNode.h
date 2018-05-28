@@ -32,6 +32,7 @@
 #include "SMP.h"
 #include "UCTNodePointer.h"
 
+
 class UCTNode {
 public:
     // When we visit a node, add this amount of virtual losses

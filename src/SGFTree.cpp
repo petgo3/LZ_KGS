@@ -161,6 +161,7 @@ void SGFTree::populate_states(void) {
         if (bsize == BOARD_SIZE) {
             m_state.init_game(bsize, komi);
             m_state.set_handicap(handicap);
+			cfg_handicap_used = handicap;
         } else {
             throw std::runtime_error("Board size not supported.");
         }
@@ -175,6 +176,7 @@ void SGFTree::populate_states(void) {
         strm >> handicap;
         has_handicap = (handicap > 0.0f);
         m_state.set_handicap(int(handicap));
+		cfg_handicap_used = handicap;
     }
 
     // result

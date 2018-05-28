@@ -324,7 +324,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 		if (search->getPlayouts() > 100)
 		{
 			game.winrate_you = search->get_dump_analysis();
-			game.cfg_quick_move = search->get_winrate();
+			cfg_quick_move = search->get_winrate();
 			if (game.get_movenum() > 2 + game.get_handicap())
 			{
 				game.else_move = game.move_to_text(search->get_best_move(0));
@@ -402,15 +402,19 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			if (search->getPlayouts() > 100)
 			{
 				// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-				if (game.cfg_reverse_board_for_net == true && ((game.get_movenum() > 50 && game.cfg_quick_move < 30.0f) || game.get_movenum() > 220))
+				if (game.cfg_reverse_board_for_net == true && ((game.get_movenum() > 50 && cfg_quick_move < 30.0f) || game.get_movenum() > 220))
 				{
-					game.cfg_reverse_board_set = true;
+					cfg_reverse_board_set = true;
+				}
+				else
+				{
+					cfg_reverse_board_set = false;
 				}
 				// analysis
 				game.winrate_me = search->get_dump_analysis();
 
 				float aktual_wr = search->get_winrate();
-				float wr_diff = aktual_wr - 100.0f + game.cfg_quick_move;
+				float wr_diff = aktual_wr - 100.0f + cfg_quick_move;
 				if (
 					game.get_movenum() == 10 || game.get_movenum() == 11 ||
 					game.get_movenum() == 30 || game.get_movenum() == 31 ||
@@ -673,6 +677,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
                     gtp_fail_printf(id, "illegal move");
                 } else {
                     game.set_handicap(game.get_handicap() + 1);
+					cfg_handicap_used = game.get_handicap();
                 }
             }
         } while (!cmdstream.fail());
@@ -896,7 +901,7 @@ void GTP::chat_kgs(GameState & game, int id, std::string command)
 		if (tmp == "wr")
 		{
 			std::string inv = "(net is normal) ";
-			if (game.cfg_reverse_board_set == true)
+			if (cfg_reverse_board_set == true)
 			{
 				inv = "(net is inverted) ";
 			}

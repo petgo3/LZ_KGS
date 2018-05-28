@@ -33,7 +33,9 @@
 #include "KoState.h"
 #include "UCTSearch.h"
 
-//bool cfg_reverse_board_use;
+bool cfg_reverse_board_set;
+int cfg_handicap_used;
+float cfg_quick_move;
 
 void GameState::init_game(int size, float komi) {
     KoState::init_game(size, komi);
@@ -58,6 +60,7 @@ void GameState::init_game(int size, float komi) {
 	correct_moves = 0;
 	counted_moves = 0;
 	cfg_quick_move = 50.0f;
+	cfg_handicap_used = 0;
 
 }
 
@@ -83,6 +86,7 @@ void GameState::reset_game() {
 	correct_moves = 0;
 	counted_moves = 0;
 	cfg_quick_move = 50.0f;
+	cfg_handicap_used = 0;
 }
 
 bool GameState::forward_move(void) {
@@ -275,7 +279,7 @@ bool GameState::set_fixed_handicap(int handicap) {
     anchor_game_history();
 
     set_handicap(handicap);
-
+	cfg_handicap_used = handicap;
     return true;
 }
 
@@ -360,6 +364,7 @@ void GameState::place_free_handicap(int stones) {
     anchor_game_history();
 
     set_handicap(orgstones);
+	cfg_handicap_used = orgstones;
 }
 
 const FullBoard& GameState::get_past_board(int moves_ago) const {

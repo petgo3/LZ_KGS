@@ -40,6 +40,7 @@
 
 using namespace Utils;
 
+
 UCTNode::UCTNode(int vertex, float score) : m_move(vertex), m_score(score) {
 }
 
@@ -267,7 +268,18 @@ UCTNode* UCTNode::uct_select_child(int color, bool is_root) {
 
     auto numerator = std::sqrt(double(parentvisits));
     auto fpu_reduction = 0.0f;
-	auto pure_eval = get_pure_eval(color);
+	float pure_eval;
+	float eval;
+	if (cfg_handicap_used > 1 && cfg_quick_move > 85.0f)
+	{
+		pure_eval = get_pure_eval(color);
+		eval = pure_eval;
+	}
+	else
+	{
+		eval = get_net_eval(color);
+		pure_eval = 0.5f;
+	}
     // Lower the expected eval for moves that are likely not the best.
     // Do not do this if we have introduced noise at this node exactly
     // to explore more.
@@ -275,7 +287,7 @@ UCTNode* UCTNode::uct_select_child(int color, bool is_root) {
         fpu_reduction = cfg_fpu_reduction * std::sqrt(total_visited_policy)*pure_eval/0.5f;
     }
     // Estimated eval for unknown nodes = current parent winrate - reduction
-	auto fpu_eval = pure_eval - fpu_reduction;
+	auto fpu_eval = eval - fpu_reduction;
 
     auto best = static_cast<UCTNodePointer*>(nullptr);
     auto best_value = std::numeric_limits<double>::lowest();

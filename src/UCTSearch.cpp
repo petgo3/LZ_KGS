@@ -475,8 +475,12 @@ void UCTSearch::dump_analysis(int playouts) {
 
     std::string pvstring = get_pv(tempstate, *m_root);
     float winrate = 100.0f * m_root->get_eval(color);
-    myprintf("Playouts: %d, Win: %5.2f%%, PV: %s\n",
-             playouts, winrate, pvstring.c_str());
+    myprintf("Playouts: %d, Win: %5.2f%%, inv %s, qm %5.2f%%, usedH %d, PV: %s \n",
+             playouts, winrate,
+			(cfg_reverse_board_set) ? "true" : "false",
+			cfg_quick_move,
+			cfg_handicap_used,
+		    pvstring.c_str());
 }
 float UCTSearch::get_winrate()
 {
@@ -626,10 +630,10 @@ int UCTSearch::think(int color, passflag_t passflag) {
         m_rootstate.board.get_boardsize());
     auto time_for_move = m_rootstate.get_timecontrol().max_time_for_move(color, m_rootstate.get_movenum());
 
-	if (m_rootstate.cfg_quick_move < 3.0f)
+	if (cfg_quick_move < 3.0f)
 	{
 		time_for_move = 300;
-		if (m_rootstate.cfg_quick_move < 1.0f)
+		if (cfg_quick_move < 1.0f)
 		{
 			time_for_move = 100;
 		}
@@ -697,7 +701,8 @@ int UCTSearch::think(int color, passflag_t passflag) {
                  m_root->get_visits(),
                  static_cast<int>(m_nodes),
                  static_cast<int>(m_playouts),
-                 (m_playouts * 100.0) / (elapsed_centis+1));
+                 (m_playouts * 100.0) / (elapsed_centis+1)			     
+			);
     }
     int bestmove = get_best_move(passflag);
 
