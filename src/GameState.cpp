@@ -280,6 +280,8 @@ bool GameState::set_fixed_handicap(int handicap) {
 
     set_handicap(handicap);
 	cfg_handicap_used = handicap;
+	cfg_reverse_board_set = false;
+
     return true;
 }
 
@@ -365,6 +367,8 @@ void GameState::place_free_handicap(int stones) {
 
     set_handicap(orgstones);
 	cfg_handicap_used = orgstones;
+	cfg_reverse_board_set = false;
+
 }
 
 const FullBoard& GameState::get_past_board(int moves_ago) const {

@@ -406,7 +406,8 @@ bool GTP::execute(GameState & game, std::string xinput) {
 				{
 					cfg_reverse_board_set = true;
 				}
-				else
+				
+				if (cfg_reverse_board_set == true && cfg_quick_move > 85.0f && game.get_movenum() < 220)
 				{
 					cfg_reverse_board_set = false;
 				}
@@ -678,6 +679,8 @@ bool GTP::execute(GameState & game, std::string xinput) {
                 } else {
                     game.set_handicap(game.get_handicap() + 1);
 					cfg_handicap_used = game.get_handicap();
+					cfg_reverse_board_set = false;
+
                 }
             }
         } while (!cmdstream.fail());
