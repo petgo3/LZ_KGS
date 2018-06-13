@@ -31,6 +31,7 @@
 extern int cfg_handicap_used;
 extern float cfg_quick_move;
 extern bool cfg_reverse_board_set;
+extern bool cfg_reverse_board_for_net;
 
 class GameState : public KoState {
 public:

@@ -174,11 +174,11 @@ int UCTNode::get_move() const {
 }
 
 void UCTNode::virtual_loss() {
-    m_virtual_loss += VIRTUAL_LOSS_COUNT;
+    m_virtual_loss += VIRTUAL_LOSS_COUNT + cfg_handicap_used;
 }
 
 void UCTNode::virtual_loss_undo() {
-    m_virtual_loss -= VIRTUAL_LOSS_COUNT;
+    m_virtual_loss -= VIRTUAL_LOSS_COUNT + cfg_handicap_used;
 }
 
 void UCTNode::update(float eval) {
@@ -257,15 +257,28 @@ UCTNode* UCTNode::uct_select_child(int color, bool is_root) {
     // Count parentvisits manually to avoid issues with transpositions.
     auto total_visited_policy = 0.0f;
     auto parentvisits = size_t{0};
-    for (const auto& child : m_children) {
+	/*float bestchild = 0.0f;
+	float bestchildcount = 0.0f;*/
+	for (const auto& child : m_children) {
         if (child.valid()) {
+			/*if (child.get_score() > bestchild)
+			{
+				bestchild = child.get_score();
+			}*/
             parentvisits += child.get_visits();
             if (child.get_visits() > 0) {
                 total_visited_policy += child.get_score();
             }
         }
     }
-
+	//for (const auto& child : m_children) {
+	//	if (child.valid()) {
+	//		/*if (child.get_score() > bestchild - 0.01f)
+	//		{
+	//			bestchildcount;
+	//		}*/
+	//	}
+	//}
     auto numerator = std::sqrt(double(parentvisits));
     auto fpu_reduction = 0.0f;
 	float pure_eval;
@@ -300,6 +313,11 @@ UCTNode* UCTNode::uct_select_child(int color, bool is_root) {
         auto winrate = fpu_eval;
         if (child.get_visits() > 0) {
             winrate = child.get_eval(color);
+			//if (cfg_handicap_used > 1 && cfg_quick_move > 85.0f && color == FullBoard::WHITE)
+			//{
+			//	// add 1% to winrate in high handicap, if answers is difficult 
+			//		winrate += 0.05f*bestchildcount/ total_visited_policy;
+			//}
         }
         auto psa = child.get_score();
         auto denom = 1.0 + child.get_visits();
@@ -326,6 +344,8 @@ public:
                     const UCTNodePointer& b) {
         // if visits are not same, sort on visits
         if (a.get_visits() != b.get_visits()) {
+			if (a.get_score() < 0.005) return true;
+			if (b.get_score() < 0.005) return false;
             return a.get_visits() < b.get_visits();
         }
 

@@ -380,15 +380,15 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			{
 				if (game.get_komi() >= 0.0f)
 				{
-					game.cfg_reverse_board_for_net = false;
+					cfg_reverse_board_for_net = false;
 					if (game.get_komi() + game.get_handicap() < 7.4f)
 					{
 						if (who == FastBoard::WHITE)
 						{
-							game.cfg_reverse_board_for_net = true;
+							cfg_reverse_board_for_net = true;
 						}
 					}
-					if (game.get_handicap() >= cfg_max_handicap && game.cfg_reverse_board_for_net)
+					if (game.get_handicap() >= cfg_max_handicap && cfg_reverse_board_for_net)
 					{
 						// high handicap only with not inverted net
 					}
@@ -401,8 +401,12 @@ bool GTP::execute(GameState & game, std::string xinput) {
 			}
 			if (search->getPlayouts() > 100)
 			{
+				if (cfg_reverse_board_for_net == false)
+				{
+					cfg_reverse_board_set = false;
+				}
 				// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-				if (game.cfg_reverse_board_for_net == true && ((game.get_movenum() > 50 && cfg_quick_move < 30.0f) || game.get_movenum() > 220))
+				if (cfg_reverse_board_for_net == true && ((game.get_movenum() > 10 && cfg_quick_move < 30.0f) || game.get_movenum() > 220))
 				{
 					cfg_reverse_board_set = true;
 				}

@@ -34,6 +34,7 @@
 #include "UCTSearch.h"
 
 bool cfg_reverse_board_set;
+bool cfg_reverse_board_for_net;
 int cfg_handicap_used;
 float cfg_quick_move;
 
