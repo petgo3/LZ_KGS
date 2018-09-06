@@ -158,9 +158,9 @@ int TimeControl::max_time_for_move(int color, int movenum) {
                 moves_remaining = m_stones_left[color];
             } else {
                 assert(m_byoperiods);
-                // Just use the byo yomi period
-                time_remaining = 0;
-                extra_time_per_move = m_byotime;
+				// Just use the byo yomi period
+				time_remaining = 0;
+				extra_time_per_move = m_byotime;
             }
         } else {
             /*

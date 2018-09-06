@@ -413,6 +413,7 @@ int UCTSearch::get_best_move(passflag_t passflag) {
                 }
             } else {
                 myprintf("Passing wins :-)\n");
+				bestmove = FastBoard::PASS;
             }
         } else if (!cfg_dumbpass
                    && m_rootstate.get_last_move() == FastBoard::PASS) {
@@ -630,13 +631,17 @@ int UCTSearch::think(int color, passflag_t passflag) {
         m_rootstate.board.get_boardsize());
     auto time_for_move = m_rootstate.get_timecontrol().max_time_for_move(color, m_rootstate.get_movenum());
 
-	if (cfg_quick_move < 3.0f)
+	if (cfg_quick_move < 10.0f)
 	{
-		time_for_move = 300;
-		if (cfg_quick_move < 1.0f)
-		{
-			time_for_move = 100;
-		}
+		time_for_move = time_for_move * cfg_quick_move / 10;
+	}
+	if (cfg_quick_move < 5.0f)
+	{
+		time_for_move = time_for_move * cfg_quick_move / 20;
+	}
+	if (time_for_move < 100)
+	{
+		time_for_move = 100;
 	}
     myprintf("Thinking at most %.1f seconds...\n", time_for_move/100.0f);
 

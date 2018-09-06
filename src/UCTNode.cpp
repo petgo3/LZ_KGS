@@ -174,11 +174,11 @@ int UCTNode::get_move() const {
 }
 
 void UCTNode::virtual_loss() {
-    m_virtual_loss += VIRTUAL_LOSS_COUNT + cfg_handicap_used;
+    m_virtual_loss += VIRTUAL_LOSS_COUNT + cfg_max_threads;
 }
 
 void UCTNode::virtual_loss_undo() {
-    m_virtual_loss -= VIRTUAL_LOSS_COUNT + cfg_handicap_used;
+    m_virtual_loss -= VIRTUAL_LOSS_COUNT + cfg_max_threads;
 }
 
 void UCTNode::update(float eval) {
@@ -344,8 +344,8 @@ public:
                     const UCTNodePointer& b) {
         // if visits are not same, sort on visits
         if (a.get_visits() != b.get_visits()) {
-			if (a.get_score() < 0.005) return true;
-			if (b.get_score() < 0.005) return false;
+			//if (a.get_score() < 0.005) return true;
+			//if (b.get_score() < 0.005) return false;
             return a.get_visits() < b.get_visits();
         }
 

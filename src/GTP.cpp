@@ -317,11 +317,14 @@ bool GTP::execute(GameState & game, std::string xinput) {
         } else {
             gtp_fail_printf(id, "syntax not understood");
         }
-
+		if (komi < 7.5f && cfg_handicap_used == 0)
+		{
+			cfg_handicap_used = 1;
+		}
         return true;
     } else if (command.find("play") == 0) {
 		// analysis
-		if (search->getPlayouts() > 100)
+		if (search->getPlayouts() > 5)
 		{
 			game.winrate_you = search->get_dump_analysis();
 			cfg_quick_move = search->get_winrate();
@@ -399,19 +402,19 @@ bool GTP::execute(GameState & game, std::string xinput) {
 					}
 				}
 			}
-			if (search->getPlayouts() > 100)
+			if (search->getPlayouts() > 100 && move != FastBoard::RESIGN)
 			{
 				if (cfg_reverse_board_for_net == false)
 				{
 					cfg_reverse_board_set = false;
 				}
 				// if playing handicap game with white, NN gets b&w inverted to use -7.5 komi (which is not correct, but better than +7.5 komi)
-				if (cfg_reverse_board_for_net == true && ((game.get_movenum() > 10 && cfg_quick_move < 30.0f) || game.get_movenum() > 220))
+				if (cfg_reverse_board_for_net == true && ((game.get_movenum() > 10 && cfg_quick_move < 50.0f) || game.get_movenum() > 220))
 				{
 					cfg_reverse_board_set = true;
 				}
 				
-				if (cfg_reverse_board_set == true && cfg_quick_move > 85.0f && game.get_movenum() < 220)
+				if (cfg_reverse_board_set == true && cfg_quick_move > 90.0f && game.get_movenum() < 220)
 				{
 					cfg_reverse_board_set = false;
 				}
@@ -471,7 +474,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
             std::string vertex = game.move_to_text(move);
             gtp_printf(id, "%s", vertex.c_str());
 
-            if (cfg_allow_pondering) {
+            if (cfg_allow_pondering && game.get_passes() < 2) {
                 // now start pondering
                 if (!game.has_resigned()) {
                     search->ponder();
@@ -507,7 +510,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
                 std::string vertex = game.move_to_text(move);
                 gtp_printf(id, "%s", vertex.c_str());
             }
-            if (cfg_allow_pondering) {
+            if (cfg_allow_pondering && game.get_passes() < 2) {
                 // now start pondering
                 if (!game.has_resigned()) {
                     search->ponder();
@@ -589,7 +592,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
 
             gtp_printf(id, "");
 
-            if (cfg_allow_pondering) {
+            if (cfg_allow_pondering && game.get_passes() < 2) {
                 // KGS sends this after our move
                 // now start pondering
                 if (!game.has_resigned()) {
